@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Command Runner</title>
+    <script>
+        // Function to run command
+        function runCommand() {
+            const command = document.getElementById('command').value;
+            fetch('http://localhost:7173/run-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command })
+            })
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to run command');
+                console.error('Error:', error);
+            });
+        }
+        
+        // Function to get device list
+        function getDeviceList() {
+            fetch('http://localhost:7173/get-device-list')
+                .then(response => response.json())
+                .then(devices => {
+                    document.getElementById('output').innerText = devices.join('\n');
+                })
+                .catch(error => {
+                    alert('Failed to get device list');
+                    console.error('Error:', error);
+                });
+        }
+
+        function tap(x, y, device) {
+            fetch(`http://localhost:7173/tap?x=${x}&y=${y}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to execute tap');
+                console.error('Error:', error);
+            });
+        }
+
+        function swipe(xPoint1, yPoint1, xPoint2, yPoint2, durationInMs, device) {
+            fetch(`http://localhost:7173/swipe?xPoint1=${xPoint1}&yPoint1=${yPoint1}&xPoint2=${xPoint2}&yPoint2=${yPoint2}&durationInMs=${durationInMs}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to execute swipe');
+                console.error('Error:', error);
+            });
+        }
+
+        function typeText(text, device) {
+            fetch(`http://localhost:7173/type?text=${encodeURIComponent(text)}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to type text');
+                console.error('Error:', error);
+            });
+        }
+
+        function takeScreenshot(filename, device) {
+            fetch(`http://localhost:7173/screenshot?filename=${filename}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to take screenshot');
+                console.error('Error:', error);
+            });
+        }
+
+        function dumpWindowXML(device) {
+            fetch(`http://localhost:7173/dump-window-xml?device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to dump window XML');
+                console.error('Error:', error);
+            });
+        }
+
+        function existsInDump(query, prop) {
+            fetch(`http://localhost:7173/exists-in-dump?query=${encodeURIComponent(query)}&prop=${encodeURIComponent(prop)}`)
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('output').innerText = result ? 'Exists' : 'Does not exist';
+            })
+            .catch(error => {
+                alert('Failed to check existence in dump');
+                console.error('Error:', error);
+            });
+        }
+
+        function getResolution(device) {
+            fetch(`http://localhost:7173/get-resolution?device=${device}`)
+            .then(response => response.json())
+            .then(resolution => {
+                document.getElementById('output').innerText = `Width: ${resolution.width}, Height: ${resolution.height}`;
+            })
+            .catch(error => {
+                alert('Failed to get resolution');
+                console.error('Error:', error);
+            });
+        }
+
+        function listInstalledApps(device) {
+            fetch(`http://localhost:7173/list-installed-apps?device=${device}`)
+            .then(response => response.json())
+            .then(apps => {
+                document.getElementById('output').innerText = apps.join('\n');
+            })
+            .catch(error => {
+                alert('Failed to list installed apps');
+                console.error('Error:', error);
+            });
+        }
+
+        function checkAppExists(appPackageName, device) {
+            fetch(`http://localhost:7173/app-exists?appPackageName=${encodeURIComponent(appPackageName)}&device=${device}`)
+            .then(response => response.json())
+            .then(exists => {
+                document.getElementById('output').innerText = exists ? 'App exists' : 'App does not exist';
+            })
+            .catch(error => {
+                alert('Failed to check if app exists');
+                console.error('Error:', error);
+            });
+        }
+
+        function clearAppCache(appPackageName, device) {
+            fetch(`http://localhost:7173/clear-app-cache?appPackageName=${encodeURIComponent(appPackageName)}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to clear app cache');
+                console.error('Error:', error);
+            });
+        }
+
+        function openApp(appPackageName, device) {
+            fetch(`http://localhost:7173/open-app?appPackageName=${encodeURIComponent(appPackageName)}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to open app');
+                console.error('Error:', error);
+            });
+        }
+
+        function installApp(appPath, device) {
+            fetch(`http://localhost:7173/install-app?appPath=${encodeURIComponent(appPath)}&device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to install app');
+                console.error('Error:', error);
+            });
+        }
+
+        function goToHome(device) {
+            fetch(`http://localhost:7173/go-to-home?device=${device}`)
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').innerText = output;
+            })
+            .catch(error => {
+                alert('Failed to go to home');
+                console.error('Error:', error);
+            });
+        }
+
+        function connectDevice(device) {
+            fetch(`http://localhost:7173/connect-device?device=${device}`)
+            .then(response => response.json())
+            .then(connected => {
+                document.getElementById('output').innerText = connected ? 'Device connected' : 'Failed to connect device';
+            })
+            .catch(error => {
+                alert('Failed to connect device');
+                console.error('Error:', error);
+            });
+        }
+
+        function getBatteryDetails(device) {
+            fetch(`http://localhost:7173/get-battery-details?device=${device}`)
+            .then(response => response.json())
+            .then(details => {
+                document.getElementById('output').innerText = JSON.stringify(details, null, 2);
+            })
+            .catch(error => {
+                alert('Failed to get battery details');
+                console.error('Error:', error);
+            });
+        }
+
+        function serviceCheck(service, device) {
+            fetch(`http://localhost:7173/service-check?service=${encodeURIComponent(service)}&device=${device}`)
+            .then(response => response.json())
+            .then(exists => {
+                document.getElementById('output').innerText = exists ? 'Service exists' : 'Service does not exist';
+            })
+            .catch(error => {
+                alert('Failed to check service');
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Terminal Command Runner</h1>
+    <div>
+        <h3>Run Command</h3>
+        <input type="text" id="command" placeholder="Enter your command"><br><br>
+        <button onclick="runCommand()">Run Terminal Command</button>
+        <button onclick="getDeviceList()">Get Device List</button>
+    </div>
+    <div>
+        <h3>Device Control</h3>
+        <input type="text" id="deviceInput" placeholder="Device ID (optional)">
+        <button onclick="getDeviceList()">Get Device List</button>
+        <button onclick="connectDevice(document.getElementById('deviceInput').value)">Connect Device</button>
+        <button onclick="goToHome(document.getElementById('deviceInput').value)">Go To Home</button>
+        <button onclick="getResolution(document.getElementById('deviceInput').value)">Get Resolution</button>
+    </div>
+
+    <div>
+        <h3>Touch Actions</h3>
+        <input type="number" id="tapX" placeholder="X coordinate">
+        <input type="number" id="tapY" placeholder="Y coordinate">
+        <button onclick="tap(document.getElementById('tapX').value, document.getElementById('tapY').value, document.getElementById('deviceInput').value)">Tap</button>
+        
+        <input type="number" id="swipeX1" placeholder="Start X">
+        <input type="number" id="swipeY1" placeholder="Start Y">
+        <input type="number" id="swipeX2" placeholder="End X">
+        <input type="number" id="swipeY2" placeholder="End Y">
+        <input type="number" id="swipeDuration" placeholder="Duration (ms)">
+        <button onclick="swipe(document.getElementById('swipeX1').value, document.getElementById('swipeY1').value, document.getElementById('swipeX2').value, document.getElementById('swipeY2').value, document.getElementById('swipeDuration').value, document.getElementById('deviceInput').value)">Swipe</button>
+    </div>
+
+    <div>
+        <h3>Text Input</h3>
+        <input type="text" id="textInput" placeholder="Text to type">
+        <button onclick="typeText(document.getElementById('textInput').value, document.getElementById('deviceInput').value)">Type Text</button>
+    </div>
+
+    <div>
+        <h3>Screen Capture</h3>
+        <input type="text" id="screenshotFilename" placeholder="Screenshot filename">
+        <button onclick="takeScreenshot(document.getElementById('screenshotFilename').value, document.getElementById('deviceInput').value)">Take Screenshot</button>
+        <button onclick="dumpWindowXML(document.getElementById('deviceInput').value)">Dump Window XML</button>
+    </div>
+
+    <div>
+        <h3>UI Query</h3>
+        <input type="text" id="queryInput" placeholder="Query">
+        <input type="text" id="propInput" placeholder="Property (optional)">
+        <button onclick="existsInDump(document.getElementById('queryInput').value, document.getElementById('propInput').value)">Check Exists in Dump</button>
+    </div>
+
+    <div>
+        <h3>App Management</h3>
+        <button onclick="listInstalledApps(document.getElementById('deviceInput').value)">List Installed Apps</button>
+        <input type="text" id="appPackageName" placeholder="App Package Name">
+        <button onclick="checkAppExists(document.getElementById('appPackageName').value, document.getElementById('deviceInput').value)">Check App Exists</button>
+        <button onclick="clearAppCache(document.getElementById('appPackageName').value, document.getElementById('deviceInput').value)">Clear App Cache</button>
+        <button onclick="openApp(document.getElementById('appPackageName').value, document.getElementById('deviceInput').value)">Open App</button>
+        <input type="text" id="appPath" placeholder="App Path">
+        <button onclick="installApp(document.getElementById('appPath').value, document.getElementById('deviceInput').value)">Install App</button>
+    </div>
+
+    <div>
+        <h3>Device Info</h3>
+        <button onclick="getBatteryDetails(document.getElementById('deviceInput').value)">Get Battery Details</button>
+    </div>
+
+    <div>
+        <h3>Service Check</h3>
+        <input type="text" id="serviceInput" placeholder="Service Name">
+        <button onclick="serviceCheck(document.getElementById('serviceInput').value, document.getElementById('deviceInput').value)">Check Service</button>
+    </div>
+
+    <div>
+        <h3>Output</h3>
+        <pre id="output"></pre>
+    </div>
+</body>
+</html>
