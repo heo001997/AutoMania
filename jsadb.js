@@ -51,8 +51,26 @@ class JSADB {
         return this.executeAdbCommand(`shell input text "${text}"`, device);
     }
 
-    screenshot(filename = 'screenshot.png', device) {
-        return this.executeAdbCommand(`shell screencap -p /sdcard/${filename} && adb pull /sdcard/${filename}`, device);
+    screenshot(device) {
+        return new Promise((resolve, reject) => {
+            const timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
+            const filename = `${device}_${timestamp}.png`;
+            this.executeAdbCommand(`shell screencap -p /sdcard/${filename} && adb pull /sdcard/${filename}`, device)
+                .then(() => {
+                    fs.readFile(filename, (err, data) => {
+                        if (err) {
+                            reject(this.errorHandler({code: -1, message: "Failed to read screenshot file"}));
+                        } else {
+                            const base64Image = data.toString('base64');
+                            fs.unlink(filename, (err) => {
+                                if (err) console.error("Failed to delete screenshot file:", err);
+                            });
+                            resolve(base64Image);
+                        }
+                    });
+                })
+                .catch(reject);
+        });
     }
 
     dumpWindowXML(device) {

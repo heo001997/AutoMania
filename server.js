@@ -73,10 +73,10 @@ app.get('/type', async (req, res) => {
 
 // Screenshot
 app.get('/screenshot', async (req, res) => {
-    const { filename, device } = req.query;
+    const { device } = req.query;
     try {
-        const result = await jsadb.screenshot(filename, device);
-        res.status(200).json({ success: true, result });
+        const result = await jsadb.screenshot(device);
+        res.json({ success: true, imageData: result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

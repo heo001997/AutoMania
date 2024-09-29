@@ -74,11 +74,18 @@
             });
         }
 
-        function takeScreenshot(filename, device) {
-            fetch(`http://localhost:7173/screenshot?filename=${filename}&device=${device}`)
-            .then(response => response.text())
-            .then(output => {
-                document.getElementById('output').innerText = output;
+        function takeScreenshot(device) {
+            fetch(`http://localhost:7173/screenshot?device=${device}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const img = document.createElement('img');
+                    img.src = 'data:image/png;base64,' + data.imageData;
+                    document.getElementById('output').innerHTML = '';
+                    document.getElementById('output').appendChild(img);
+                } else {
+                    document.getElementById('output').innerText = 'Failed to take screenshot: ' + data.error;
+                }
             })
             .catch(error => {
                 alert('Failed to take screenshot');
@@ -271,7 +278,7 @@
     <div>
         <h3>Screen Capture</h3>
         <input type="text" id="screenshotFilename" placeholder="Screenshot filename">
-        <button onclick="takeScreenshot(document.getElementById('screenshotFilename').value, document.getElementById('deviceInput').value)">Take Screenshot</button>
+        <button onclick="takeScreenshot(document.getElementById('deviceInput').value)">Take Screenshot</button>
         <button onclick="dumpWindowXML(document.getElementById('deviceInput').value)">Dump Window XML</button>
     </div>
 
