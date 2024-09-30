@@ -74,7 +74,24 @@ class JSADB {
     }
 
     dumpWindowXML(device) {
-        return this.executeAdbCommand('shell uiautomator dump && adb pull /sdcard/window_dump.xml', device);
+        return new Promise((resolve, reject) => {
+            const timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
+            const filename = `window_dump_${device}_${timestamp}.xml`;
+            this.executeAdbCommand(`shell uiautomator dump /sdcard/${filename} && adb pull /sdcard/${filename}`, device)
+                .then(() => {
+                    fs.readFile(filename, 'utf8', (err, data) => {
+                        if (err) {
+                            reject(this.errorHandler({code: -1, message: "Failed to read window dump file"}));
+                        } else {
+                            fs.unlink(filename, (err) => {
+                                if (err) console.error("Failed to delete window dump file:", err);
+                            });
+                            resolve(data);
+                        }
+                    });
+                })
+                .catch(reject);
+        });
     }
 
     existsInDump(query, prop) {
@@ -229,6 +246,41 @@ class JSADB {
     async serviceCheck(service, device) {
         const output = await this.executeAdbCommand(`shell service check ${service}`, device);
         return !output.includes('not found');
+    }
+
+    findNearestNodeAtCoordinates(x, y, xmlData) {
+        const boundsRegex = /bounds="(\[(\d+),(\d+)\]\[(\d+),(\d+)\])"/;
+        const lines = xmlData.split('\n');
+        let nearestNode = null;
+        let smallestArea = Infinity;
+
+        for (let line of lines) {
+            const match = line.match(boundsRegex);
+            if (match) {
+                const [, , left, top, right, bottom] = match.map(Number);
+                if (x >= left && x <= right && y >= top && y <= bottom) {
+                    const area = (right - left) * (bottom - top);
+                    if (area < smallestArea) {
+                        smallestArea = area;
+                        // Extract all attributes using regex
+                        const attributes = {};
+                        const attrRegex = /(\S+)="([^"]*)"/g;
+                        let attrMatch;
+                        while ((attrMatch = attrRegex.exec(line)) !== null) {
+                            attributes[attrMatch[1]] = attrMatch[2];
+                        }
+                        nearestNode = attributes;
+                    }
+                }
+            }
+        }
+
+        return nearestNode;
+    }
+
+    async findNearestNodeAtCoordinatesFromDump(x, y, device) {
+        const xmlData = await this.dumpWindowXML(device);
+        return this.findNearestNodeAtCoordinates(x, y, xmlData);
     }
 }
 
