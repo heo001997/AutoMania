@@ -16,6 +16,7 @@ Developed by Matheus Ibrahim (Matth33w) - 2023
 const { exec } = require("child_process");
 const fs = require("fs");
 const readline = require("readline");
+const { DOMParser } = require('xmldom');
 
 class JSADB {
     constructor() {
@@ -248,39 +249,99 @@ class JSADB {
         return !output.includes('not found');
     }
 
-    findNearestNodeAtCoordinates(x, y, xmlData) {
-        const boundsRegex = /bounds="(\[(\d+),(\d+)\]\[(\d+),(\d+)\])"/;
-        const lines = xmlData.split('\n');
-        let nearestNode = null;
-        let smallestArea = Infinity;
+    findNodeAtCoordinate(x, y, xmlData) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlData, "text/xml");
 
-        for (let line of lines) {
-            const match = line.match(boundsRegex);
-            if (match) {
-                const [, , left, top, right, bottom] = match.map(Number);
+        const parseNode = (node) => {
+            if (node.nodeType !== 1) return null; // 1 is ELEMENT_NODE
+
+            const bounds = node.attributes.getNamedItem('bounds');
+            if (bounds) {
+                const [left, top, right, bottom] = bounds.value.match(/\d+/g).map(Number);
                 if (x >= left && x <= right && y >= top && y <= bottom) {
-                    const area = (right - left) * (bottom - top);
-                    if (area < smallestArea) {
-                        smallestArea = area;
-                        // Extract all attributes using regex
-                        const attributes = {};
-                        const attrRegex = /(\S+)="([^"]*)"/g;
-                        let attrMatch;
-                        while ((attrMatch = attrRegex.exec(line)) !== null) {
-                            attributes[attrMatch[1]] = attrMatch[2];
-                        }
-                        nearestNode = attributes;
+                    let bestMatch = null;
+                    for (let i = 0; i < node.childNodes.length; i++) {
+                        const childMatch = parseNode(node.childNodes[i]);
+                        if (childMatch) bestMatch = childMatch;
                     }
+                    return bestMatch || node;
                 }
             }
-        }
 
-        return nearestNode;
+            // If this node doesn't have bounds, check its children
+            for (let i = 0; i < node.childNodes.length; i++) {
+                const childMatch = parseNode(node.childNodes[i]);
+                if (childMatch) return childMatch;
+            }
+
+            return null;
+        };
+
+        const result = parseNode(xmlDoc.documentElement);
+        if (result) {
+            const attributes = {};
+            for (let i = 0; i < result.attributes.length; i++) {
+                const attr = result.attributes[i];
+                attributes[attr.name] = attr.value;
+            }
+            attributes.xpath = this.generateXPath(result);
+            return attributes;
+        }
+        return null;
     }
 
-    async findNearestNodeAtCoordinatesFromDump(x, y, device) {
+    generateXPath(node) {
+        const parts = [];
+        while (node && node.nodeType === 1) { // 1 is ELEMENT_NODE
+            let sibling = node;
+            let count = 1;
+            while (sibling = sibling.previousSibling) {
+                if (sibling.nodeType === 1 && sibling.nodeName === node.nodeName) {
+                    count++;
+                }
+            }
+            const xpathPart = count > 1 ? 
+                `${node.nodeName.toLowerCase()}[${count}]` : 
+                node.nodeName.toLowerCase();
+            parts.unshift(xpathPart);
+            node = node.parentNode;
+        }
+        return `/${parts.join('/')}`;
+    }
+
+    async findNodeAtCoordinateFromDump(x, y, device) {
         const xmlData = await this.dumpWindowXML(device);
-        return this.findNearestNodeAtCoordinates(x, y, xmlData);
+        
+        // // Save XML data to a file
+        // const timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
+        // const filename = `window_dump_${device}_${timestamp}.xml`;
+        // await fs.promises.writeFile(filename, xmlData);
+        
+        // console.log(`XML data saved to ${filename}`);
+
+        return this.findNodeAtCoordinate(x, y, xmlData);
+    }
+
+    async findNodeByXPath(xpath, device) {
+        const xmlData = await this.dumpWindowXML(device);
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlData, "text/xml");
+
+        const select = require('xpath').select;
+        const nodes = select(xpath, xmlDoc);
+
+        if (nodes.length > 0) {
+            const node = nodes[0];
+            const attributes = {};
+            for (let i = 0; i < node.attributes.length; i++) {
+                const attr = node.attributes[i];
+                attributes[attr.name] = attr.value;
+            }
+            attributes.xpath = xpath;
+            return attributes;
+        }
+        return null;
     }
 }
 

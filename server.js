@@ -76,7 +76,7 @@ app.get('/screenshot', async (req, res) => {
     const { device } = req.query;
     try {
         const result = await jsadb.screenshot(device);
-        res.json({ success: true, imageData: result });
+        res.json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -87,7 +87,7 @@ app.get('/dump-window-xml', async (req, res) => {
     const { device } = req.query;
     try {
         const result = await jsadb.dumpWindowXML(device);
-        res.json({ success: true, xmlData: result });
+        res.json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -229,8 +229,19 @@ app.get('/service-check', async (req, res) => {
 app.get('/find-nearest-node', async (req, res) => {
     const { x, y, device } = req.query;
     try {
-        const result = await jsadb.findNearestNodeAtCoordinatesFromDump(parseInt(x), parseInt(y), device);
-        res.status(200).json({ success: true, node: result });
+        const result = await jsadb.findNodeAtCoordinateFromDump(parseInt(x), parseInt(y), device);
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Find Node by XPath
+app.get('/find-node-by-xpath', async (req, res) => {
+    const { xpath, device } = req.query;
+    try {
+        const result = await jsadb.findNodeByXPath(xpath, device);
+        res.status(200).json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

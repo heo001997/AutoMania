@@ -7,14 +7,8 @@
     <script>
         // Function to run command
         function runCommand() {
-            const command = document.getElementById('command').value;
-            fetch('http://localhost:7173/run-command', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ command })
-            })
+            const command = encodeURIComponent(document.getElementById('command').value);
+            fetch(`http://localhost:7173/run-command?command=${command}`)
             .then(response => response.text())
             .then(output => {
                 document.getElementById('output').innerText = output;
@@ -297,6 +291,28 @@
                 console.error('Error:', error);
             });
         }
+
+        function findNodeByXPath(xpath, device) {
+            fetch(`http://localhost:7173/find-node-by-xpath?xpath=${encodeURIComponent(xpath)}&device=${device}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const formattedNode = JSON.stringify(data.result, null, 2);
+                    const styledNode = `
+                        <div style="font-family: monospace; white-space: pre-wrap; background-color: #f0f0f0; padding: 10px; border-radius: 5px; max-height: 500px; overflow-y: auto;">
+                            ${escapeHTML(formattedNode)}
+                        </div>
+                    `;
+                    document.getElementById('output').innerHTML = styledNode;
+                } else {
+                    document.getElementById('output').innerText = 'Failed to find node by XPath: ' + data.error;
+                }
+            })
+            .catch(error => {
+                alert('Failed to find node by XPath');
+                console.error('Error:', error);
+            });
+        }
     </script>
 </head>
 <body>
@@ -377,6 +393,12 @@
         <h3>Service Check</h3>
         <input type="text" id="serviceInput" placeholder="Service Name">
         <button onclick="serviceCheck(document.getElementById('serviceInput').value, document.getElementById('deviceInput').value)">Check Service</button>
+    </div>
+
+    <div>
+        <h3>Find Node by XPath</h3>
+        <input type="text" id="xpathInput" placeholder="XPath">
+        <button onclick="findNodeByXPath(document.getElementById('xpathInput').value, document.getElementById('deviceInput').value)">Find Node by XPath</button>
     </div>
 
     <div>
