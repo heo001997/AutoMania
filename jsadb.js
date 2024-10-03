@@ -48,8 +48,34 @@ class JSADB {
         return this.executeAdbCommand(`shell input swipe ${xPoint1} ${yPoint1} ${xPoint2} ${yPoint2} ${durationInMs}`, device);
     }
 
-    type(text, device) {
-        return this.executeAdbCommand(`shell input text "${text}"`, device);
+    async type(text, device) {
+        // Decode the URL-encoded text
+        let decodedText = decodeURIComponent(text);
+        decodedText = decodedText.replace(/"/g, '\\"'); // Escape double quotes
+
+        let command = 'shell input';
+        for (let i = 0; i < decodedText.length; i++) {
+            const char = decodedText[i];
+            let keyCode;
+            
+            if (char === '\n') {
+                keyCode = '66';
+            } else if (char === ' ') {
+                keyCode = 'KEYCODE_SPACE';
+            } else if (/[a-z]/i.test(char)) {
+                keyCode = `KEYCODE_${char.toUpperCase()}`;
+            } else if (/[0-9]/.test(char)) {
+                keyCode = `KEYCODE_${char}`;
+            } else {
+                // For special characters, use text input
+                command += ` text "${char}"`;
+                continue;
+            }
+
+            command += ` keyevent ${keyCode}`;
+        }
+
+        return this.executeAdbCommand(command, device);
     }
 
     screenshot(device) {
@@ -342,6 +368,58 @@ class JSADB {
             return attributes;
         }
         return null;
+    }
+
+    async getCurrentInputText(device) {
+        const xmlData = await this.dumpWindowXML(device);
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlData, "text/xml");
+
+        const select = require('xpath').select;
+        const editTextNodes = select("//node[@class='android.widget.EditText']", xmlDoc);
+
+        if (editTextNodes.length > 0) {
+            const focusedNode = editTextNodes.find(node => node.getAttribute('focused') === 'true');
+            if (focusedNode) {
+                const text = focusedNode.getAttribute('text');
+                const contentDesc = focusedNode.getAttribute('content-desc');
+                const hint = focusedNode.getAttribute('hint');
+                
+                // Check if the text is not empty and different from hint (if available)
+                if (text && text !== hint && text !== contentDesc) {
+                    return text;
+                }
+                
+                // If text is empty or same as hint, the input is likely empty
+                return '';
+            }
+        }
+
+        return '';
+    }
+
+    async clearCurrentInput(device, currentText = null) {
+        try {
+            // Get current input text if not provided
+            if (currentText === null || currentText === undefined || currentText === "") {
+                currentText = await this.getCurrentInputText(device);
+            }
+            
+            if (!currentText) {
+                return "Input is already empty";
+            }
+
+            // Calculate number of delete key events needed (add some extra for safety)
+            const deleteCount = currentText.length + 10;
+
+            // Move to the end of the input and send multiple delete key events in a single command
+            const deleteCommand = `input keyevent KEYCODE_MOVE_END ${Array(deleteCount).fill('KEYCODE_DEL').join(' ')}`;
+            await this.executeAdbCommand(`shell ${deleteCommand}`, device);
+
+            return "Input cleared successfully";
+        } catch (error) {
+            throw new Error(`Failed to clear input: ${error.message}`);
+        }
     }
 }
 

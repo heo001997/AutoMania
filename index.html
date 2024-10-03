@@ -313,6 +313,44 @@
                 console.error('Error:', error);
             });
         }
+
+        function getCurrentInputText(device) {
+            fetch(`http://localhost:7173/get-current-input-text?device=${device}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('output').innerText = `Current Input Text: ${data.result}`;
+                } else {
+                    document.getElementById('output').innerText = 'Failed to get current input text: ' + data.error;
+                }
+            })
+            .catch(error => {
+                alert('Failed to get current input text');
+                console.error('Error:', error);
+            });
+        }
+
+        function clearCurrentInput(device, currentText = '') {
+            const url = new URL('http://localhost:7173/clear-current-input');
+            url.searchParams.append('device', device);
+            if (currentText) {
+                url.searchParams.append('currentText', currentText);
+            }
+
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('output').innerText = data.result;
+                } else {
+                    document.getElementById('output').innerText = 'Failed to clear current input: ' + data.error;
+                }
+            })
+            .catch(error => {
+                alert('Failed to clear current input');
+                console.error('Error:', error);
+            });
+        }
     </script>
 </head>
 <body>
@@ -399,6 +437,13 @@
         <h3>Find Node by XPath</h3>
         <input type="text" id="xpathInput" placeholder="XPath">
         <button onclick="findNodeByXPath(document.getElementById('xpathInput').value, document.getElementById('deviceInput').value)">Find Node by XPath</button>
+    </div>
+
+    <div>
+        <h3>Get Current Input Text</h3>
+        <button onclick="getCurrentInputText(document.getElementById('deviceInput').value)">Get Current Input Text</button>
+        <input type="text" id="currentTextInput" placeholder="Current Text (optional)">
+        <button onclick="clearCurrentInput(document.getElementById('deviceInput').value, document.getElementById('currentTextInput').value)">Clear Current Input</button>
     </div>
 
     <div>

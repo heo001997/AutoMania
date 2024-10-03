@@ -64,8 +64,8 @@ app.get('/swipe', async (req, res) => {
 app.get('/type', async (req, res) => {
     const { text, device } = req.query;
     try {
-        const result = await jsadb.type(text, device);
-        res.status(200).json({ success: true, result });
+        await jsadb.type(text, device);
+        res.status(200).json({ success: true, result: 'Text typed successfully' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -241,6 +241,28 @@ app.get('/find-node-by-xpath', async (req, res) => {
     const { xpath, device } = req.query;
     try {
         const result = await jsadb.findNodeByXPath(xpath, device);
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get Current Input Text
+app.get('/get-current-input-text', async (req, res) => {
+    const { device } = req.query;
+    try {
+        const result = await jsadb.getCurrentInputText(device);
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Clear Current Input
+app.get('/clear-current-input', async (req, res) => {
+    const { device, currentText } = req.query;
+    try {
+        const result = await jsadb.clearCurrentInput(device, currentText);
         res.status(200).json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
