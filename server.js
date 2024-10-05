@@ -117,9 +117,9 @@ app.get('/get-resolution', async (req, res) => {
 
 // List of Installed Apps
 app.get('/list-installed-apps', async (req, res) => {
-    const { device } = req.query;
+    const { device, includeSystemApps } = req.query;
     try {
-        const result = await jsadb.listOfInstalledApps(device);
+        const result = await jsadb.listOfInstalledApps(device, includeSystemApps === 'true');
         res.status(200).json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -263,6 +263,17 @@ app.get('/clear-current-input', async (req, res) => {
     const { device, currentText } = req.query;
     try {
         const result = await jsadb.clearCurrentInput(device, currentText);
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Keep Screen On
+app.get('/keep-screen-on', async (req, res) => {
+    const { device } = req.query;
+    try {
+        const result = await jsadb.keepScreenOn(device);
         res.status(200).json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

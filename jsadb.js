@@ -154,9 +154,12 @@ class JSADB {
             .filter(device => device.trim() !== '');
     }
 
-    async listOfInstalledApps(device) {
-        const output = await this.executeAdbCommand('shell pm list packages', device);
-        return output.replace(/\r/g, '').replace(/package:/g, '').split('\n');
+    async listOfInstalledApps(device, includeSystemApps = false) {
+        const command = includeSystemApps
+            ? 'shell pm list packages'
+            : 'shell pm list packages -3';
+        const output = await this.executeAdbCommand(command, device);
+        return output.replace(/\r/g, '').replace(/package:/g, '').split('\n').filter(Boolean);
     }
 
     appExists(appPackageName, device) {
@@ -420,6 +423,10 @@ class JSADB {
         } catch (error) {
             throw new Error(`Failed to clear input: ${error.message}`);
         }
+    }
+
+    keepScreenOn(device) {
+        return this.executeAdbCommand('shell input keyevent KEYCODE_UNKNOWN', device);
     }
 }
 

@@ -188,7 +188,7 @@
             fetch(`http://localhost:7173/list-installed-apps?device=${device}`)
             .then(response => response.json())
             .then(apps => {
-                document.getElementById('output').innerText = apps.join('\n');
+                document.getElementById('output').innerText = apps.result.join('\n');
             })
             .catch(error => {
                 alert('Failed to list installed apps');
@@ -351,6 +351,22 @@
                 console.error('Error:', error);
             });
         }
+
+        function keepScreenOn(device) {
+            fetch(`http://localhost:7173/keep-screen-on?device=${device}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('output').innerText = 'Sent keep screen on command successfully';
+                } else {
+                    document.getElementById('output').innerText = 'Failed to send keep screen on command: ' + data.error;
+                }
+            })
+            .catch(error => {
+                alert('Failed to send keep screen on command');
+                console.error('Error:', error);
+            });
+        }
     </script>
 </head>
 <body>
@@ -368,6 +384,7 @@
         <button onclick="connectDevice(document.getElementById('deviceInput').value)">Connect Device</button>
         <button onclick="goToHome(document.getElementById('deviceInput').value)">Go To Home</button>
         <button onclick="getResolution(document.getElementById('deviceInput').value)">Get Resolution</button>
+        <button onclick="keepScreenOn(document.getElementById('deviceInput').value)">Keep Screen On</button>
     </div>
 
     <div>
