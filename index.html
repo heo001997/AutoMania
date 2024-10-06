@@ -352,20 +352,28 @@
             });
         }
 
-        function keepScreenOn(device) {
-            fetch(`http://localhost:7173/keep-screen-on?device=${device}`)
+        function screenAwake(device, isOn) {
+            fetch(`http://localhost:7173/screen-awake?device=${device}&isOn=${isOn}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('output').innerText = 'Sent keep screen on command successfully';
+                    document.getElementById('output').innerText = isOn ? 'Screen set to stay on' : 'Screen set to normal behavior';
+                    document.getElementById('screenAwakeToggle').innerText = isOn ? 'Turn Off Keep Screen On' : 'Keep Screen On';
                 } else {
-                    document.getElementById('output').innerText = 'Failed to send keep screen on command: ' + data.error;
+                    document.getElementById('output').innerText = 'Failed to change screen awake setting: ' + data.error;
                 }
             })
             .catch(error => {
-                alert('Failed to send keep screen on command');
+                alert('Failed to change screen awake setting');
                 console.error('Error:', error);
             });
+        }
+
+        function toggleScreenAwake() {
+            const device = document.getElementById('deviceInput').value;
+            const button = document.getElementById('screenAwakeToggle');
+            const isCurrentlyOn = button.innerText === 'Turn Off Keep Screen On';
+            screenAwake(device, !isCurrentlyOn);
         }
     </script>
 </head>
@@ -384,7 +392,7 @@
         <button onclick="connectDevice(document.getElementById('deviceInput').value)">Connect Device</button>
         <button onclick="goToHome(document.getElementById('deviceInput').value)">Go To Home</button>
         <button onclick="getResolution(document.getElementById('deviceInput').value)">Get Resolution</button>
-        <button onclick="keepScreenOn(document.getElementById('deviceInput').value)">Keep Screen On</button>
+        <button id="screenAwakeToggle" onclick="toggleScreenAwake()">Keep Screen On</button>
     </div>
 
     <div>

@@ -425,8 +425,12 @@ class JSADB {
         }
     }
 
-    keepScreenOn(device) {
-        return this.executeAdbCommand('shell input keyevent KEYCODE_UNKNOWN', device);
+    screenAwake(device) {
+        return this.executeAdbCommand('shell svc power stayon usb', device);
+    }
+
+    screenAwakeOff(device) {
+        return this.executeAdbCommand('shell svc power stayon false', device);
     }
 }
 

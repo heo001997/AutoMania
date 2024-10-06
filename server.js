@@ -270,10 +270,26 @@ app.get('/clear-current-input', async (req, res) => {
 });
 
 // Keep Screen On
-app.get('/keep-screen-on', async (req, res) => {
+app.get('/screen-awake', async (req, res) => {
+    const { device, isOn } = req.query;
+    try {
+        let result;
+        if (isOn === 'true') {
+            result = await jsadb.screenAwake(device);
+        } else {
+            result = await jsadb.screenAwakeOff(device);
+        }
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Turn Off Screen Stay On
+app.get('/turn-off-screen-stay-on', async (req, res) => {
     const { device } = req.query;
     try {
-        const result = await jsadb.keepScreenOn(device);
+        const result = await jsadb.turnOffScreenStayOn(device);
         res.status(200).json({ success: true, result });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
