@@ -6,24 +6,23 @@ const JSADB = require('./jsadb');
 const jsadb = new JSADB();
 
 const app = express();
-const PORT = 7173;
+const PORT = 9744;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
 // Route to execute terminal commands
-app.get('/run-command', (req, res) => {
-    const { command } = req.query;
+app.get('/run-command', async (req, res) => {
+    const command = decodeURIComponent(req.query.command);
     if (!command) return res.status(400).send('No command provided');
 
-    // Execute the command
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            return res.status(500).send(`Error: ${stderr}`);
-        }
-        res.status(200).send(`${stdout}`);
-    });
+    try {
+        const result = await jsadb.executeAdbCommand("shell " + command);
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).send(`Error: ${error.message}`);
+    }
 });
 
 // New route to get device list
