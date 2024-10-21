@@ -8,7 +8,8 @@
         // Function to run command
         function runCommand() {
             const command = encodeURIComponent(document.getElementById('command').value);
-            fetch(`http://localhost:7173/run-command?command=${command}`)
+            const device = encodeURIComponent(document.getElementById('deviceInput').value);
+            fetch(`http://localhost:7173/run-command?command=${command}&device=${device}`)
             .then(response => response.text())
             .then(output => {
                 document.getElementById('output').innerText = output;

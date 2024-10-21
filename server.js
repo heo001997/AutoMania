@@ -14,14 +14,15 @@ app.use(bodyParser.json());
 
 // Route to execute terminal commands
 app.get('/run-command', async (req, res) => {
-    const command = decodeURIComponent(req.query.command);
+    const { command, device } = req.query;
     if (!command) return res.status(400).send('No command provided');
 
     try {
-        const result = await jsadb.executeAdbCommand("shell " + command);
+        const decodedCommand = decodeURIComponent(command);
+        const result = await jsadb.executeAdbCommand(`${device ? `-s ${device} ` : ''}shell ${decodedCommand}`);
         res.status(200).json({ success: true, result });
     } catch (error) {
-        res.status(500).send(`Error: ${error.message}`);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
